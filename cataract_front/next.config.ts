@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: '*.hf.space',
+        pathname: '/static/**',
+      },
+      {
+        protocol: 'https',
         hostname: '*.onrender.com',
         pathname: '/static/**',
       },
