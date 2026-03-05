@@ -5,11 +5,10 @@ import os
 
 def create_app():
     app = Flask(__name__)
-    CORS(app) # Enable CORS for all domains so Next.js on port 3000 can communicate with Flask on port 5000
     
-    # Override template and static folder to be explicit if needed, 
-    # but since __init__.py is in backend/app, default templates/static should work relative to it.
-    
+    # Enable CORS for all domains, specifically allowing Vercel and local development
+    CORS(app, resources={r"/*": {"origins": "*"}}) 
+
     app.config.from_object(Config)
 
     # Ensure upload directory exists

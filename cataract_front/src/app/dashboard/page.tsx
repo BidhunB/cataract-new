@@ -78,10 +78,12 @@ export default function DashboardPage() {
       const formData = new FormData();
       formData.append("file", file);
 
+      const API_BASE =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const endpoint =
         imageType === "fundus"
-          ? "http://localhost:5000/predict_multiclass"
-          : "http://localhost:5000/predict_slit_lamp";
+          ? `${API_BASE}/predict_multiclass`
+          : `${API_BASE}/predict_slit_lamp`;
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -105,10 +107,12 @@ export default function DashboardPage() {
 
       // Ensure we have an absolute URL for the image
       let imgUrl = URL.createObjectURL(file);
+      const API_BASE2 =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       if (data.visualizations?.original) {
         imgUrl = data.visualizations.original.startsWith("http")
           ? data.visualizations.original
-          : `http://localhost:5000${data.visualizations.original}`;
+          : `${API_BASE2}${data.visualizations.original}`;
       }
 
       const analysisData = {

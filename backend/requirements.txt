@@ -1,14 +1,11 @@
-Flask==3.0.2
-Flask-Cors==4.0.0
-gunicorn==21.2.0
-
-# Using PyTorch CPU version is CRITICAL for cloud deployments (like Render)
-# to avoid massive 4GB+ GPU package sizes and timeout errors.
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.2.1+cpu
-torchvision==0.17.1+cpu
-
-numpy==1.26.4
-Pillow==10.2.0
-opencv-python-headless==4.9.0.80
-scikit-learn==1.4.1.post1
+torch
+torchvision
+Flask
+Flask-Cors
+numpy
+opencv-python-headless
+Pillow
+scikit-learn
+tqdm
+gunicorn

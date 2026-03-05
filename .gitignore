@@ -1,4 +1,5 @@
 
+# Python / IDE
 __pycache__/
 *.pyc
 .DS_Store
@@ -6,7 +7,12 @@ __pycache__/
 venv/
 .idea/
 .vscode/
-saved_models/
+
+# Keep saved models so Render can download the .pth files
+!saved_models/
+!backend/ml/models/weights/
+
+# Data sets are too big, ignore them
 data/processed/
 
 # Images
