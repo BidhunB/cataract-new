@@ -77,6 +77,10 @@ def save_temp_image(image_array, prefix="step"):
     # Filename should be 'uploads/filename'
     return url_for('static', filename=f'uploads/{filename}')
 
+@main.route('/health')
+def health():
+    return jsonify({'status': 'ok'}), 200
+
 @main.route('/')
 def index():
     return render_template('index.html')
