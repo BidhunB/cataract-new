@@ -63,8 +63,9 @@ export default function ResultsPage() {
           !cleanVisualizations[key].startsWith("http") &&
           !cleanVisualizations[key].startsWith("blob")
         ) {
-          cleanVisualizations[key] =
-            `http://localhost:5000${cleanVisualizations[key]}`;
+          const API_URL =
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+          cleanVisualizations[key] = `${API_URL}${cleanVisualizations[key]}`;
         }
       });
 
