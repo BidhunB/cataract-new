@@ -22,37 +22,52 @@ _inference_normalize = T.Normalize(IMAGENET_MEAN, IMAGENET_STD)
 # Create Blueprint
 main = Blueprint('main', __name__)
 
-# Load Model
+# Lazy model loading — models are loaded on first request, not at import time.
+# This prevents Gunicorn workers from running out of memory during boot.
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+_multiclass_model = None
+_multiclass_model_loaded = False
+_slit_lamp_model = None
+_slit_lamp_model_loaded = False
 
-multiclass_model_loaded = False
-try:
-    multiclass_model = get_model(num_classes=4, dropout_rate=0.0, pretrained=False)
-    multiclass_model_path = os.path.join(Config.MODEL_SAVE_DIR, "densenet_multiclass_best.pth")
-    if os.path.exists(multiclass_model_path):
-        multiclass_model.load_state_dict(torch.load(multiclass_model_path, map_location=device))
-        print(f"Loaded multi-class model from {multiclass_model_path}")
-        multiclass_model_loaded = True
-    else:
-        print(f"Warning: Multi-class model not found at {multiclass_model_path}. Using variable weights.")
-    multiclass_model.to(device)
-    multiclass_model.eval()
-except Exception as e:
-    print(f"Error loading multiclass model: {e}")
+def get_multiclass_model():
+    global _multiclass_model, _multiclass_model_loaded
+    if _multiclass_model is not None:
+        return _multiclass_model, _multiclass_model_loaded
+    try:
+        _multiclass_model = get_model(num_classes=4, dropout_rate=0.0, pretrained=False)
+        multiclass_model_path = os.path.join(Config.MODEL_SAVE_DIR, "densenet_multiclass_best.pth")
+        if os.path.exists(multiclass_model_path):
+            _multiclass_model.load_state_dict(torch.load(multiclass_model_path, map_location=device))
+            print(f"Loaded multi-class model from {multiclass_model_path}")
+            _multiclass_model_loaded = True
+        else:
+            print(f"Warning: Multi-class model not found at {multiclass_model_path}.")
+        _multiclass_model.to(device)
+        _multiclass_model.eval()
+    except Exception as e:
+        print(f"Error loading multiclass model: {e}")
+    return _multiclass_model, _multiclass_model_loaded
 
-try:
-    slit_lamp_model = get_model(num_classes=Config.SLIT_LAMP_NUM_CLASSES, dropout_rate=0.0, pretrained=False)
-    slit_lamp_model_path = os.path.join(Config.MODEL_SAVE_DIR, f"{Config.SLIT_LAMP_MODEL_NAME}_best.pth")
-    if os.path.exists(slit_lamp_model_path):
-        slit_lamp_model.load_state_dict(torch.load(slit_lamp_model_path, map_location=device))
-        print(f"Loaded slit-lamp model from {slit_lamp_model_path}")
-    else:
-        print(f"Warning: Slit-lamp model not found at {slit_lamp_model_path}. Using variable weights.")
-    slit_lamp_model.to(device)
-    slit_lamp_model.eval()
-except Exception as e:
-    print(f"Error loading slit-lamp model: {e}")
+def get_slit_lamp_model():
+    global _slit_lamp_model, _slit_lamp_model_loaded
+    if _slit_lamp_model is not None:
+        return _slit_lamp_model, _slit_lamp_model_loaded
+    try:
+        _slit_lamp_model = get_model(num_classes=Config.SLIT_LAMP_NUM_CLASSES, dropout_rate=0.0, pretrained=False)
+        slit_lamp_model_path = os.path.join(Config.MODEL_SAVE_DIR, f"{Config.SLIT_LAMP_MODEL_NAME}_best.pth")
+        if os.path.exists(slit_lamp_model_path):
+            _slit_lamp_model.load_state_dict(torch.load(slit_lamp_model_path, map_location=device))
+            print(f"Loaded slit-lamp model from {slit_lamp_model_path}")
+            _slit_lamp_model_loaded = True
+        else:
+            print(f"Warning: Slit-lamp model not found at {slit_lamp_model_path}.")
+        _slit_lamp_model.to(device)
+        _slit_lamp_model.eval()
+    except Exception as e:
+        print(f"Error loading slit-lamp model: {e}")
+    return _slit_lamp_model, _slit_lamp_model_loaded
 
 def save_temp_image(image_array, prefix="step"):
     """Saves a numpy image to static/uploads and returns the relative URL."""
@@ -88,6 +103,7 @@ def index():
 
 @main.route('/predict_multiclass', methods=['POST'])
 def predict_multiclass():
+    multiclass_model, multiclass_model_loaded = get_multiclass_model()
     if not multiclass_model_loaded:
         return jsonify({'error': 'The Fundus AI model has not been trained yet. Please use the Slit-Lamp image option.'}), 503
 
@@ -162,6 +178,7 @@ def predict_multiclass():
 
 @main.route('/predict_slit_lamp', methods=['POST'])
 def predict_slit_lamp():
+    slit_lamp_model, _ = get_slit_lamp_model()
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     
