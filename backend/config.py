@@ -8,7 +8,6 @@ class Config:
     DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
     
     # Raw Data
-    RAW_DATA_BINARY = os.path.join(DATA_DIR, 'raw', 'fundus_binary')
     RAW_DATA_MULTICLASS = os.path.join(DATA_DIR, 'raw', 'fundus_multiclass')
     RAW_DATA_SLIT_LAMP = os.path.join(DATA_DIR, 'raw', 'slit_lamp', 'slit-lamp')
     
@@ -28,10 +27,10 @@ class Config:
     BATCH_SIZE = 32
     NUM_WORKERS = 0 # Set to 0 for Windows compatibility
     
-    # Model params
+    # Model params (defaults for multiclass)
     MODEL_NAME = 'densenet169'
-    NUM_CLASSES = 1 # Binary classification
-    DROPOUT_RATE = 0.7
+    NUM_CLASSES = 4 # Default to Multiclass
+    DROPOUT_RATE = 0.5
     
     # Slit-Lamp Params
     SLIT_LAMP_CLASSES = ['normal', 'immature', 'mature']
@@ -45,11 +44,6 @@ class Config:
     PATIENCE = 5 # Increase patience for longer training
     DROPOUT_RATE = 0.7 # Updated here from model params section if needed, or rely on usage
     
-    # Specific Training Params (Binary)
-    BINARY_LEARNING_RATE = 1e-4
-    BINARY_EPOCHS = 20
-    BINARY_BATCH_SIZE = 16
-    BINARY_DROPOUT_RATE = 0.5
     
     # Specific Training Params (Multiclass)
     MULTICLASS_LEARNING_RATE = 1e-4

@@ -24,3 +24,7 @@ slit-lamp/
 cataract/
 data/
 dataset_cataract_final/
+/cataract_front/node_modules
+/cataract_front/.next
+/cataract_front/out
+/cataract_front/build

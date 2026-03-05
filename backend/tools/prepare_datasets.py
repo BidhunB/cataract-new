@@ -229,7 +229,7 @@ def main():
     parser.add_argument(
         "--dataset",
         type=str,
-        choices=['binary', 'multiclass', 'slit_lamp', 'all'],
+        choices=['multiclass', 'slit_lamp', 'all'],
         default='slit_lamp',
         help="Which dataset to process",
     )
@@ -282,23 +282,6 @@ def main():
             processed_root=sl_out,
             train_ratio=args.train_ratio,
             use_green_channel=False,
-            dry_run=args.dry_run,
-        )
-
-    # ── Fundus Binary ─────────────────────────────────────────────────────────
-    if args.dataset in ['binary', 'all']:
-        bin_out = os.path.join(Config.PROCESSED_DATA_DIR, 'fundus', 'binary')
-        if os.path.exists(bin_out):
-            print(f"\n  Clearing existing output: {bin_out}")
-            shutil.rmtree(bin_out)
-        os.makedirs(bin_out, exist_ok=True)
-
-        process_and_save_dataset(
-            name="Fundus Binary",
-            raw_root=Config.RAW_DATA_BINARY,
-            processed_root=bin_out,
-            train_ratio=args.train_ratio,
-            use_green_channel=True,
             dry_run=args.dry_run,
         )
 

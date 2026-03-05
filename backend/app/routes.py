@@ -25,26 +25,15 @@ main = Blueprint('main', __name__)
 # Load Model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Initialize models (Load lazily or globally? Globally is fine for single worker)
-# We need to make sure Config paths are correct
-try:
-    model = get_model(num_classes=Config.NUM_CLASSES, dropout_rate=0.0, pretrained=False)
-    model_path = os.path.join(Config.MODEL_SAVE_DIR, f"{Config.MODEL_NAME}_best.pth")
-    if os.path.exists(model_path):
-        model.load_state_dict(torch.load(model_path, map_location=device))
-        print(f"Loaded model from {model_path}")
-    else:
-        print(f"Warning: Best model not found at {model_path}. Using variable weights.")
-    model.to(device)
-except Exception as e:
-    print(f"Error loading binary model: {e}")
 
+multiclass_model_loaded = False
 try:
     multiclass_model = get_model(num_classes=4, dropout_rate=0.0, pretrained=False)
     multiclass_model_path = os.path.join(Config.MODEL_SAVE_DIR, "densenet_multiclass_best.pth")
     if os.path.exists(multiclass_model_path):
         multiclass_model.load_state_dict(torch.load(multiclass_model_path, map_location=device))
         print(f"Loaded multi-class model from {multiclass_model_path}")
+        multiclass_model_loaded = True
     else:
         print(f"Warning: Multi-class model not found at {multiclass_model_path}. Using variable weights.")
     multiclass_model.to(device)
@@ -92,63 +81,12 @@ def save_temp_image(image_array, prefix="step"):
 def index():
     return render_template('index.html')
 
-@main.route('/predict', methods=['POST'])
-def predict():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-
-    try:
-        # 1. Save Original
-        ext = os.path.splitext(file.filename)[1]
-        filename = f"original_{uuid.uuid4().hex[:8]}{ext}"
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-        
-        # 2. Load and Preprocess
-        # Reuse image_loader logic
-        image = load_image(filepath) # Returns RGB
-        
-        # Get intermediate steps
-        processed_input, steps = preprocess_pipeline(image, target_size=Config.IMAGE_SIZE)
-        
-        # 3. Save Steps for Visualization
-        visualizations = {}
-        visualizations['original'] = url_for('static', filename=f'uploads/{filename}')
-        
-        # Steps keys: 'resized', 'green_channel', 'denoised', 'enhanced'
-        if 'green_channel' in steps:
-            visualizations['green'] = save_temp_image(steps['green_channel'], 'green')
-        if 'denoised' in steps:
-            visualizations['denoised'] = save_temp_image(steps['denoised'], 'denoised')
-        if 'enhanced' in steps:
-            visualizations['clahe'] = save_temp_image(steps['enhanced'], 'clahe')
-        
-        # 4. Inference
-        tensor_img = torch.tensor(processed_input).permute(2, 0, 1).float()
-        tensor_img = _inference_normalize(tensor_img).unsqueeze(0).to(device)
-        
-        with torch.no_grad():
-            output = model(tensor_img)
-            probability = torch.sigmoid(output).item()
-            
-        prediction = "Cataract" if probability > 0.5 else "Normal"
-        confidence = probability if probability > 0.5 else 1 - probability
-        
-        return jsonify({
-            'prediction': prediction,
-            'confidence': f"{confidence*100:.2f}%",
-            'visualizations': visualizations
-        })
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @main.route('/predict_multiclass', methods=['POST'])
 def predict_multiclass():
+    if not multiclass_model_loaded:
+        return jsonify({'error': 'The Fundus AI model has not been trained yet. Please use the Slit-Lamp image option.'}), 503
+
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     
@@ -194,6 +132,10 @@ def predict_multiclass():
         classes = ['Normal', 'Mild', 'Moderate', 'Severe']
         prediction = classes[predicted_idx]
         
+        # Convert tensor probabilities to a list of percentages
+        probs_list = probabilities[0].tolist()
+        class_probabilities = {classes[i]: round(probs_list[i] * 100, 2) for i in range(len(classes))}
+        
         # Model Performance Metrics (from Test Set)
         # TODO: Load these dynamically or from config if possible
         metrics = {
@@ -206,6 +148,7 @@ def predict_multiclass():
         return jsonify({
             'prediction': prediction,
             'confidence': f"{confidence*100:.2f}%", 
+            'class_probabilities': class_probabilities,
             'metrics': metrics,
             'visualizations': visualizations
         })
@@ -259,9 +202,13 @@ def predict_slit_lamp():
             
         prediction = Config.SLIT_LAMP_CLASSES[predicted_idx].capitalize()
         
+        probs_list = probabilities[0].tolist()
+        class_probabilities = {Config.SLIT_LAMP_CLASSES[i].capitalize(): round(probs_list[i] * 100, 2) for i in range(len(Config.SLIT_LAMP_CLASSES))}
+        
         return jsonify({
             'prediction': prediction,
             'confidence': f"{confidence*100:.2f}%",
+            'class_probabilities': class_probabilities,
             'visualizations': visualizations
         })
 
