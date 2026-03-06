@@ -157,3 +157,16 @@ python backend/ml/training/train_multiclass.py --epochs 100
 python backend/ml/training/train_slit_lamp.py --dry-run
 python backend/ml/training/train_slit_lamp.py --epochs 100
 ```
+=======
+title: Cataract Detection
+emoji: 🏢
+colorFrom: gray
+colorTo: pink
+sdk: docker
+pinned: false
+license: mit
+short_description: AI-Based Cataract Detection Using Deep Learning Models
+---
+
+Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
+ c48679b60b88a8824a32eaa95fa6c1bb335842ad
