@@ -1,3 +1,12 @@
+---
+title: Cataract AI Diagnostic
+emoji: 👁️
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 # Cataract AI Diagnostic System
 
 A deep learning-based application for detecting cataracts using both **Fundus** and **Slit-Lamp** eye images.
@@ -121,10 +130,8 @@ python backend/tools/prepare_datasets.py --dataset binary --no-augment
 -- Extracts the L (Lightness) channel.
 -- Applies CLAHE (Contrast Limited Adaptive Histogram Equalization) to the L channel only (clipLimit=2.0, tileGridSize=(8,8)).
 -- Merges channels back and converts to RGB. Rationale: This enhances contrast without distorting the color information.
--- Normalization: Pixel values are scaled to the range [0, 1] (divided by 255.0).
-3. Splitting
--- The dataset is split into Train, Validation, and Test sets (default: 70% / 15% / 15%).
-4. Offline Augmentation (Train Set Only)
+-- Normalization: Pixel values are scaled to the range [0, 1] (divided by 255.0). 3. Splitting
+-- The dataset is split into Train, Validation, and Test sets (default: 70% / 15% / 15%). 4. Offline Augmentation (Train Set Only)
 -- If augmentation is enabled, the definitions from augmentations.py (get_train_transforms(image_type='slit_lamp')) are applied to generate 4 additional copies per image:
 
 -- Random Horizontal Flip: 50% probability.

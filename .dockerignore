@@ -1,0 +1,31 @@
+# Version Control
+.git
+.gitignore
+
+# Dependencies
+node_modules/
+backend/__pycache__/
+*.pyc
+
+# Environment Files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.venv
+venv/
+
+# Next.js Build
+cataract_front/.next/
+cataract_front/out/
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Uploads and temporary data
+backend/app/static/uploads/
